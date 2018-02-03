@@ -1,3 +1,3 @@
 export interface GitCommitActionContext {
-    commitIdentifier?: string
+  commitIdentifier?: string;
 }

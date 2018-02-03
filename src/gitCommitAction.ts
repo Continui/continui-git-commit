@@ -7,7 +7,7 @@ import { exec } from 'child_process';
 import { error } from 'util';
 
 const privateScope = new WeakMap<GitCommitAction, {
-    textTemplateService: TextTemplateService,
+  textTemplateService: TextTemplateService,
 }>();
 
 /**
@@ -15,33 +15,33 @@ const privateScope = new WeakMap<GitCommitAction, {
  */
 export class GitCommitAction implements Action<GitCommitActionContext> {
 
-    constructor(textTemplateService: any) {
-        privateScope.set(this, {
-            textTemplateService,
-        });
-    }
+  constructor(textTemplateService: any) {
+    privateScope.set(this, {
+      textTemplateService,
+    });
+  }
 
     /**
      * Get the action identifier.
      */
-    public get identifier(): string { return 'git-commit'; }
+  public get identifier(): string { return 'git-commit'; }
 
     /**
      * Get the action name.
      */
-    public get name(): string { return 'Git Commit'; }
+  public get name(): string { return 'Git Commit'; }
 
     /**
      * Get the action description.
      */
-    public get description(): string {
-        return 'Represents a git action that can create commits in a git respository.';
-    }
+  public get description(): string {
+    return 'Represents a git action that can create commits in a git respository.';
+  }
 
     /**
      * Represents the action otions used to execute the action.
      */
-    public get options(): ActionOption[] { return this.getOptions(); }
+  public get options(): ActionOption[] { return this.getOptions(); }
 
     /**
      * Creates a restoration point based on the action to rollback the changes if the pipe
@@ -49,129 +49,129 @@ export class GitCommitAction implements Action<GitCommitActionContext> {
      * @param actionOptionsValueMap Represents the options values provided to run the action.
      * @param context Represents the action execution context.
      */
-    public createsRestaurationPoint(actionOptionValueMap: ActionOptionValueMap,
-        context: GitCommitActionContext)
+  public createsRestaurationPoint(actionOptionValueMap: ActionOptionValueMap,
+                                  context: GitCommitActionContext)
         : void | Promise<void> | IterableIterator<any> {
         // NOTHING to do here.
-    }
+  }
 
     /**
      * Execute the action base on the given options and context.
      * @param actionOptionsValueMap Represents the options values provided to run the action.
      * @param context Represents the action execution context.
      */
-    public * execute(actionOptionValueMap: ActionOptionValueMap,
-        context: GitCommitActionContext)
+  public * execute(actionOptionValueMap: ActionOptionValueMap,
+                   context: GitCommitActionContext)
         : void | Promise<void> | IterableIterator<any> {
 
-        if (actionOptionValueMap.file && actionOptionValueMap.fileAll) {
-            throw new Error('Can not stage all files when specific files are provided in file option.')
-        }
-
-        yield this.stageFiles(actionOptionValueMap);
-
-        yield this.commitChanges(actionOptionValueMap, context);       
+    if (actionOptionValueMap.file && actionOptionValueMap.fileAll) {
+      throw new Error('Can not stage all files when specific files are provided in file option.');
     }
+
+    yield this.stageFiles(actionOptionValueMap);
+
+    yield this.commitChanges(actionOptionValueMap, context);       
+  }
 
     /**
      * Restore the action base on the given options and context.
      * @param context Represents the action execution context.
      */
-    public * restore(actionOptionValueMap: ActionOptionValueMap,
-                     context: GitCommitActionContext)
+  public * restore(actionOptionValueMap: ActionOptionValueMap,
+                   context: GitCommitActionContext)
         : void | Promise<void> | IterableIterator<any> {
 
-        let revertCommand: string = `git revert ${context.commitIdentifier}`;
-        return this.executeCommand(revertCommand);
-    }
+    const revertCommand: string = `git revert ${context.commitIdentifier}`;
+    return this.executeCommand(revertCommand);
+  }
 
     /**
      * Creates and return an new context bases on the provided options.
      * @param actionOptionsValueMap Represents the options values provided to run the action.
      * @returns A new execution context bases on the provided options.
      */
-    public createsContextFromOptionsMap(actionOptionsValueMap: ActionOptionValueMap)
+  public createsContextFromOptionsMap(actionOptionsValueMap: ActionOptionValueMap)
         : GitCommitActionContext {
-        return {};
-    }
+    return {};
+  }
 
-    private stageFiles(actionOptionValueMap: ActionOptionValueMap): Promise<void> {
-        const files: string[] = actionOptionValueMap.fileAll ? 
+  private stageFiles(actionOptionValueMap: ActionOptionValueMap): Promise<void> {
+    const files: string[] = actionOptionValueMap.fileAll ? 
                                     ['.'] :
                                     actionOptionValueMap.file instanceof Array ?
                                         actionOptionValueMap.file :
                                         [actionOptionValueMap.file];
         
-        let stageCommand: string = `git add "${files.join(' ')}"`;
-            stageCommand += actionOptionValueMap.fileForce ? ' -f' : '';
-            stageCommand += actionOptionValueMap.fileVerbose ? ' -v' : '';
+    let stageCommand: string = `git add "${files.join(' ')}"`;
+    stageCommand += actionOptionValueMap.fileForce ? ' -f' : '';
+    stageCommand += actionOptionValueMap.fileVerbose ? ' -v' : '';
 
-            return this.executeCommand(stageCommand);
-    }
+    return this.executeCommand(stageCommand);
+  }
 
-    private commitChanges(actionOptionValueMap: ActionOptionValueMap,
-                          context: GitCommitActionContext): Promise<void> {
+  private commitChanges(actionOptionValueMap: ActionOptionValueMap,
+                        context: GitCommitActionContext): Promise<void> {
 
-        let commitCommand: string = `git commit -m "${actionOptionValueMap.message}"`;
-            commitCommand += actionOptionValueMap.verbose ? ' -v' : '';
+    let commitCommand: string = `git commit -m "${actionOptionValueMap.message}"`;
+    commitCommand += actionOptionValueMap.verbose ? ' -v' : '';
 
-        return this.executeCommand(commitCommand, output => context.commitIdentifier = output);
-    }
+    return this.executeCommand(commitCommand, output => context.commitIdentifier = output);
+  }
 
-    private executeCommand(command: string,
-                           onSuccess: (output: string) => void = null): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            exec(command, (error: Error, stdout: string, strerr: string) => {
-                if (error) {
-                    throw error;
-                }
+  private executeCommand(command: string,
+                         onSuccess: (output: string) => void = null): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      exec(command, (error: Error, stdout: string, strerr: string) => {
+        if (error) {
+          throw error;
+        }
 
                 // TODO: emit event about the output of the process.
 
-                onSuccess(stdout);
-                resolve();
-            });
-        });
-    }
+        onSuccess(stdout);
+        resolve();
+      });
+    });
+  }
 
     /**
      * Returns the action options.
      * @returns The action options.
      */
-    private getOptions(): ActionOption[] {
+  private getOptions(): ActionOption[] {
 
-        return [{
-            key: 'message',
-            description: 'Represents the message of the commit',
-            isRequired: true,
-            type: ActionOptionTypes.text,
-        },
-        {
-            key: 'verbose',
-            description: 'Represents a boolean value specifying if the commit will be verbose',
-            type: ActionOptionTypes.boolean,
-        },
-        {
-            key: 'file',
-            description: 'Represents the file(s) that will be commited',
-            type: ActionOptionTypes.list,
-            defaultValue: 'api.github.com',
-        },
-        {
-            key: 'file-all',
-            description: 'Represents a boolean value specifying if all modified and deleted files ' +
+    return [{
+      key: 'message',
+      description: 'Represents the message of the commit',
+      isRequired: true,
+      type: ActionOptionTypes.text,
+    },
+    {
+      key: 'verbose',
+      description: 'Represents a boolean value specifying if the commit will be verbose',
+      type: ActionOptionTypes.boolean,
+    },
+    {
+      key: 'file',
+      description: 'Represents the file(s) that will be commited',
+      type: ActionOptionTypes.list,
+      defaultValue: 'api.github.com',
+    },
+    {
+      key: 'file-all',
+      description: 'Represents a boolean value specifying if all modified and deleted files ' +
                          'will be commited',
-            type: ActionOptionTypes.boolean,
-        },
-        {
-            key: 'file-force',
-            description: 'Represents a boolean value specifying if the files staging will be forced',
-            type: ActionOptionTypes.boolean,
-        },
-        {
-            key: 'file-verbose',
-            description: 'Represents a boolean value specifying if the files staging will be verbose',
-            type: ActionOptionTypes.boolean,
-        }];
-    }
+      type: ActionOptionTypes.boolean,
+    },
+    {
+      key: 'file-force',
+      description: 'Represents a boolean value specifying if the files staging will be forced',
+      type: ActionOptionTypes.boolean,
+    },
+    {
+      key: 'file-verbose',
+      description: 'Represents a boolean value specifying if the files staging will be verbose',
+      type: ActionOptionTypes.boolean,
+    }];
+  }
 }
