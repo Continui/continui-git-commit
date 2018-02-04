@@ -17,7 +17,7 @@ import { CommitRequest } from './domain/models/commitRequest';
 
 const privateScope = new WeakMap<GitCommitAction, {
   gitStageService: GitStageService,
-  gitCommitingService: GitCommitService,
+  gitCommitService: GitCommitService,
   gitCommitReversionService: GitCommitReversionService,
   textTemplateService: TextTemplateService,
 }>();
@@ -28,14 +28,14 @@ const privateScope = new WeakMap<GitCommitAction, {
 export class GitCommitAction extends Action<GitCommitActionContext> {
 
   constructor(gitStageService: GitStageService,
-              gitCommitingService: GitCommitService,
+              gitCommitService: GitCommitService,
               gitCommitReversionService: GitCommitReversionService,
               textTemplateService: TextTemplateService) {
     super();
 
     privateScope.set(this, {
       gitStageService,
-      gitCommitingService,
+      gitCommitService,
       gitCommitReversionService,
       textTemplateService,
     });
@@ -90,7 +90,7 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
                .stage(this.getStageRequestFromActionOptions(actionOptionValueMap));
 
     context.commitIdentifier =
-      yield scope.gitCommitingService
+      yield scope.gitCommitService
                  .commit(this.getCommitRequestFromActionOptions(actionOptionValueMap));     
   }
 
