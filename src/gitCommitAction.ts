@@ -117,10 +117,11 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
     return {};
   }
 
-    /**
-     * 
-     * @param actionOptionValueMap Represents the stage 
-     */
+  /**
+   * Return a stage request based on the provided action options values.
+   * @param actionOptionValueMap Represents the provided action options values.
+   * @returns A stage request.
+   */
   private getStageRequestFromActionOptions(actionOptionValueMap: ActionOptionValueMap):
     StageRequest {
 
@@ -146,6 +147,11 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
     };    
   }
 
+  /**
+   * Return a commit request based on the provided action options values.
+   * @param actionOptionValueMap Represents the provided action options values.
+   * @returns A commit request.
+   */
   private getCommitRequestFromActionOptions(actionOptionValueMap: ActionOptionValueMap): 
     CommitRequest {
     return {
@@ -158,7 +164,7 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
   }
 
   /**
-   * 
+   * Emmit an event with the provided information.
    * @param information Represents the information that will be emmited.
    */
   private emitInformation(information: string) {
