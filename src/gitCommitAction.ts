@@ -203,6 +203,11 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
       key: 'file-verbose',
       description: 'Represents a boolean value specifying if the files staging will be verbose',
       type: ActionOptionTypes.boolean,
+    },
+    {
+      key: 'directory',
+      description: 'Represents the path where the operation will be performed.',
+      type: ActionOptionTypes.text,
     }];
   }
 }
