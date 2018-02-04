@@ -18,6 +18,10 @@ const rollupOptions = {
     input: './src/index.ts',
     plugins: [
         rollupTypescript(rollupTypescriptOptions)
+    ],
+    external: [
+        'continui-action',
+        'continui-services'
     ]
 }
 

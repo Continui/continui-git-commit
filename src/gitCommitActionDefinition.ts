@@ -1,5 +1,10 @@
 import { ActionActivationDefinition, ActionActivationReference, Action } from 'continui-action';
 import { GitCommitAction } from './gitCommitAction';
+import {
+  BuildInGitCommitReversionService,
+} from './buid-in/services/buildInGitCommitReversionService';
+import { BuildInGitCommitService } from './buid-in/services/buildInGitCommitService';
+import { BuildInGitStageService } from './buid-in/services/buildInGitStageService';
 
 /**
  * Represents a action activation definition for GitHub releases.
@@ -18,5 +23,20 @@ export class GitCommitActionDefinition implements ActionActivationDefinition {
    /**
    * Represents the action activation references, also called dependency references.
    */
-  public get activationReferences(): ActionActivationReference[] { return []; }
+  public get activationReferences(): ActionActivationReference[] { 
+    return [
+      {
+        alias: 'gitCommitReversionService',
+        target: BuildInGitCommitReversionService,
+      },
+      {
+        alias: 'gitCommitService',
+        target: BuildInGitCommitService,
+      },
+      {
+        alias: 'gitStageService',
+        target: BuildInGitStageService,
+      },
+    ]; 
+  }
 }

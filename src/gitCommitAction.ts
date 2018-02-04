@@ -1,22 +1,42 @@
 
-import { Action, ActionOption, ActionOptionTypes, ActionOptionValueMap } from 'continui-action';
+import {
+  Action,
+  ActionOption,
+  ActionOptionTypes,
+  ActionOptionValueMap,
+  ContinuiActionEvents,
+} from 'continui-action';
 import { GitCommitActionContext } from './gitCommitActionContext';
-import { TextTemplateService } from 'continui-services';
-
+import { TextTemplateService, CommandExecutionService } from 'continui-services';
 import { exec } from 'child_process';
-import { error } from 'util';
+import { GitStageService } from './domain/services/gitStageService';
+import { GitCommitService } from './domain/services/gitCommitService';
+import { GitCommitReversionService } from './domain/services/gitCommitReversionService';
+import { StageRequest } from './domain/models/stageRequest';
+import { CommitRequest } from './domain/models/commitRequest';
 
 const privateScope = new WeakMap<GitCommitAction, {
+  gitStageService: GitStageService,
+  gitCommitingService: GitCommitService,
+  gitCommitReversionService: GitCommitReversionService,
   textTemplateService: TextTemplateService,
 }>();
 
 /**
  * Represents a git action that can create commits in a git respository.
  */
-export class GitCommitAction implements Action<GitCommitActionContext> {
+export class GitCommitAction extends Action<GitCommitActionContext> {
 
-  constructor(textTemplateService: any) {
+  constructor(gitStageService: GitStageService,
+              gitCommitingService: GitCommitService,
+              gitCommitReversionService: GitCommitReversionService,
+              textTemplateService: TextTemplateService) {
+    super();
+
     privateScope.set(this, {
+      gitStageService,
+      gitCommitingService,
+      gitCommitReversionService,
       textTemplateService,
     });
   }
@@ -64,13 +84,14 @@ export class GitCommitAction implements Action<GitCommitActionContext> {
                    context: GitCommitActionContext)
         : void | Promise<void> | IterableIterator<any> {
 
-    if (actionOptionValueMap.file && actionOptionValueMap.fileAll) {
-      throw new Error('Can not stage all files when specific files are provided in file option.');
-    }
+    const scope = privateScope.get(this);
 
-    yield this.stageFiles(actionOptionValueMap);
+    yield scope.gitStageService
+               .stage(this.getStageRequestFromActionOptions(actionOptionValueMap));
 
-    yield this.commitChanges(actionOptionValueMap, context);       
+    context.commitIdentifier =
+      yield scope.gitCommitingService
+                 .commit(this.getCommitRequestFromActionOptions(actionOptionValueMap));     
   }
 
     /**
@@ -81,8 +102,9 @@ export class GitCommitAction implements Action<GitCommitActionContext> {
                    context: GitCommitActionContext)
         : void | Promise<void> | IterableIterator<any> {
 
-    const revertCommand: string = `git revert ${context.commitIdentifier}`;
-    return this.executeCommand(revertCommand);
+    return privateScope.get(this)
+                       .gitCommitReversionService
+                       .revertCommit(context.commitIdentifier);
   }
 
     /**
@@ -95,43 +117,52 @@ export class GitCommitAction implements Action<GitCommitActionContext> {
     return {};
   }
 
-  private stageFiles(actionOptionValueMap: ActionOptionValueMap): Promise<void> {
-    const files: string[] = actionOptionValueMap.fileAll ? 
-                                    ['.'] :
-                                    actionOptionValueMap.file instanceof Array ?
-                                        actionOptionValueMap.file :
-                                        [actionOptionValueMap.file];
-        
-    let stageCommand: string = `git add "${files.join(' ')}"`;
-    stageCommand += actionOptionValueMap.fileForce ? ' -f' : '';
-    stageCommand += actionOptionValueMap.fileVerbose ? ' -v' : '';
+    /**
+     * 
+     * @param actionOptionValueMap Represents the stage 
+     */
+  private getStageRequestFromActionOptions(actionOptionValueMap: ActionOptionValueMap):
+    StageRequest {
 
-    return this.executeCommand(stageCommand);
+    let files: string[];
+
+    if (actionOptionValueMap.fileAll) {
+      files = ['.'];
+    } else {      
+      files = actionOptionValueMap.file instanceof Array ?
+                   actionOptionValueMap.file :
+                   actionOptionValueMap.file ?
+                      [actionOptionValueMap.file] :
+                      [];
+    }
+
+    return {
+      files,
+      options: {
+        force: !!actionOptionValueMap.fileForce,
+        verbose: !!actionOptionValueMap.fileVerbose,
+        directory: actionOptionValueMap.directory,
+      },
+    };    
   }
 
-  private commitChanges(actionOptionValueMap: ActionOptionValueMap,
-                        context: GitCommitActionContext): Promise<void> {
-
-    let commitCommand: string = `git commit -m "${actionOptionValueMap.message}"`;
-    commitCommand += actionOptionValueMap.verbose ? ' -v' : '';
-
-    return this.executeCommand(commitCommand, output => context.commitIdentifier = output);
+  private getCommitRequestFromActionOptions(actionOptionValueMap: ActionOptionValueMap): 
+    CommitRequest {
+    return {
+      message: actionOptionValueMap.message,
+      options: {
+        verbose: !!actionOptionValueMap.verbose,
+        directory: actionOptionValueMap.directory,
+      },
+    };
   }
 
-  private executeCommand(command: string,
-                         onSuccess: (output: string) => void = null): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      exec(command, (error: Error, stdout: string, strerr: string) => {
-        if (error) {
-          throw error;
-        }
-
-                // TODO: emit event about the output of the process.
-
-        onSuccess(stdout);
-        resolve();
-      });
-    });
+  /**
+   * 
+   * @param information Represents the information that will be emmited.
+   */
+  private emitInformation(information: string) {
+    this.emit(ContinuiActionEvents.INFORMATION_AVAILABLE, information);
   }
 
     /**
