@@ -32,11 +32,10 @@ export class BuildInGitStageService implements GitStageService {
 
     const commandOptions: CommandExecutionOptions =  stageRequest.options.directory ? {
       directory: stageRequest.options.directory,
-      enviroment: {},
     } : null;
 
     await privateScope.get(this)
                           .commandExecutionService
-                          .excuteCommand(stageCommand, commandOptions);
+                          .executeCommand(stageCommand, commandOptions);
   }
 }

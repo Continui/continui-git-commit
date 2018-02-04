@@ -23,7 +23,7 @@ export class BuildInGitCommitReversionService implements GitCommitReversionServi
   public async revertCommit(commitIentifier: string): Promise<void> {
     await privateScope.get(this)
                           .commandExecutionService
-                          .excuteCommand(`git revert ${commitIentifier}`);
+                          .executeCommand(`git revert ${commitIentifier}`);
                            
   }
 }

@@ -32,15 +32,14 @@ export class BuildInGitCommitService implements GitCommitService {
 
     const commandOptions: CommandExecutionOptions = commitRequest.options.directory ? {
       directory: commitRequest.options.directory,
-      enviroment: {},
     } : null;
 
     await privateScope.get(this)
                           .commandExecutionService
-                          .excuteCommand(commitCommand, commandOptions);
+                          .executeCommand(commitCommand, commandOptions);
 
     return privateScope.get(this)
                            .commandExecutionService
-                           .excuteCommand('git log --format="%H" -n 1', commandOptions);
+                           .executeCommand('git log --format="%H" -n 1', commandOptions);
   }
 }
