@@ -192,7 +192,6 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
       key: 'file',
       description: 'Represents the file(s) that will be commited',
       type: ActionOptionTypes.list,
-      defaultValue: 'api.github.com',
     },
     {
       key: 'file-all',
