@@ -107,11 +107,11 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
                        .revertCommit(context.commitIdentifier);
   }
 
-    /**
-     * Creates and return an new context bases on the provided options.
-     * @param actionOptionsValueMap Represents the options values provided to run the action.
-     * @returns A new execution context bases on the provided options.
-     */
+  /**
+   * Creates and return an new context bases on the provided options.
+   * @param actionOptionsValueMap Represents the options values provided to run the action.
+   * @returns A new execution context bases on the provided options.
+   */
   public createsContextFromOptionsMap(actionOptionsValueMap: ActionOptionValueMap)
         : GitCommitActionContext {
     return {};
@@ -154,8 +154,11 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
    */
   private getCommitRequestFromActionOptions(actionOptionValueMap: ActionOptionValueMap): 
     CommitRequest {
+
+    const scope = privateScope.get(this);
+
     return {
-      message: actionOptionValueMap.message,
+      message: scope.textTemplateService.parse(actionOptionValueMap.message),
       options: {
         verbose: !!actionOptionValueMap.verbose,
         directory: actionOptionValueMap.directory,
@@ -181,6 +184,7 @@ export class GitCommitAction extends Action<GitCommitActionContext> {
       key: 'message',
       description: 'Represents the message of the commit',
       isRequired: true,
+      isTemplated: true,
       type: ActionOptionTypes.text,
     },
     {
