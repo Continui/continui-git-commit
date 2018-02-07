@@ -1,4 +1,4 @@
-import { ActionActivationDefinition, ActionActivationReference, Action } from 'continui-action';
+import { ActionActivationDefinition, Action, ActionActivationContext } from 'continui-action';
 import { GitCommitAction } from './gitCommitAction';
 import {
   BuildInGitCommitReversionService,
@@ -20,23 +20,22 @@ export class GitCommitActionDefinition implements ActionActivationDefinition {
    */
   public get action(): Function { return GitCommitAction; }
 
-   /**
-   * Represents the action activation references, also called dependency references.
-   */
-  public get activationReferences(): ActionActivationReference[] { 
-    return [
-      {
-        alias: 'gitCommitReversionService',
-        target: BuildInGitCommitReversionService,
-      },
-      {
-        alias: 'gitCommitService',
-        target: BuildInGitCommitService,
-      },
-      {
-        alias: 'gitStageService',
-        target: BuildInGitStageService,
-      },
-    ]; 
+  /**
+    * Register the stp dependencies into the provided containerized kernel.
+    * @param ActionActivationContext Reresents the activation context.
+    */
+  public registerDependencies(actionActivationContext: ActionActivationContext): void {
+    actionActivationContext.containerizedKernel
+                           .bind('gitCommitReversionService')
+                           .to(BuildInGitCommitReversionService);
+
+    actionActivationContext.containerizedKernel
+                           .bind('gitCommitService')
+                           .to(BuildInGitCommitService);
+
+    actionActivationContext.containerizedKernel
+                           .bind('gitStageService')
+                           .to(BuildInGitStageService);
+
   }
 }
